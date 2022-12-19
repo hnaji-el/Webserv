@@ -1,7 +1,10 @@
 
 NAME = webserv
 
-SRCS = main.cpp
+SRCS = main.cpp \
+	   Parser.cpp Lexer.cpp Token.cpp
+
+HEADERS = Parser.hpp Lexer.hpp Token.hpp Exceptions.hpp
 
 COMPILER = c++
 
@@ -9,7 +12,7 @@ FLAGS = -std=c++98 -Wall -Wextra -Werror
 
 all: $(NAME)
 
-$(NAME): $(SRCS)
+$(NAME): $(SRCS) $(HEADERS)
 	$(COMPILER) $(FLAGS) $(SRCS) -o $(NAME)
 
 clean:

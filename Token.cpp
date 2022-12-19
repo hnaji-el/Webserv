@@ -1,13 +1,22 @@
 
 #include "Token.hpp"
 
-Token::Token(const TokenType& type, const std::string& value)
-	: _type(type), _value(value)
+/*
+ * Constructors && Destructor
+ */
+
+Token::Token(void)
+	: type(), value()
+{
+}
+
+Token::Token(const TokenType& tp, const std::string& val)
+	: type(tp), value(val)
 {
 }
 
 Token::Token(const Token& src)
-	: _type(src._type), _value(src._value)
+	: type(src.type), value(src.value)
 {
 }
 
@@ -15,13 +24,16 @@ Token::~Token(void)
 {
 }
 
-// Copy assignment operator
+/*
+ * Copy assignment operator
+ */
+
 Token&	Token::operator=(const Token& rhs)
 {
 	if (this != &rhs)
 	{
-		this->_type = rhs._type;
-		this->_value = rhs._value;
+		this->type = rhs.type;
+		this->value = rhs.value;
 	}
 
 	return (*this);

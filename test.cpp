@@ -2,17 +2,15 @@
 #include <iostream>
 #include <string>
 
+enum Test {
+	ID = 7,
+	WORD = 9
+};
+
 int	main(void)
 {
-	char	arr[] = "hamid";
-	std::string	str;
+	Test	ts = WORD;
 
-	for (size_t i = 0; i < 5; i++)
-		str += arr[i];
-
-	std::cout << arr << std::endl;
-	if (str[4] == '\0')
-		std::cout << str << std::endl;
-
+	std::cout << ts << std::endl;
 	return (0);
 }

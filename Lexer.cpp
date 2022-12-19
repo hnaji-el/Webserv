@@ -1,14 +1,27 @@
 
 #include "Lexer.hpp"
 
-Lexer::Lexer(const std::string& line)
-	: _line(line), _curIndex(0), _curChar(line[0])
+/*
+ * Constructors && Destructor
+ */
+
+Lexer::Lexer(const std::string& fileName)
 {
+	this->_fileStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+
+	this->_fileStream.open(fileName);
+	std::getline(this->_fileStream, this->_line);
+	this->_curIndex = 0;
+	this->_curChar = this->_line[0];
 }
 
 Lexer::~Lexer(void)
 {
 }
+
+/*
+ * Member functions
+ */
 
 Token	Lexer::lexerGetNextToken(void)
 {
@@ -22,7 +35,10 @@ Token	Lexer::lexerGetNextToken(void)
 		if (this->_curChar != '\0')
 			return (this->getWordToken());
 	}
-	return (Token(TOKEN_EOF, "newline"));
+
+	if (this->_fileStream.eof())
+		return (Token(TOKEN_EOF, "EOF"));
+	return (getEndOfLineToken());
 }
 
 void	Lexer::lexerSkipWhitespaces(void)
@@ -61,4 +77,13 @@ Token	Lexer::getWordToken(void)
 		this->lexerAdvance();
 	}
 	return (Token(TOKEN_WORD, word));
+}
+
+Token	Lexer::getEndOfLineToken(void)
+{
+	std::getline(this->_fileStream, this->_line);
+	this->_curIndex = 0;
+	this->_curChar = this->_line[0];
+
+	return (Token(TOKEN_EOL, "newline"));
 }

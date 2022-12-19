@@ -2,38 +2,26 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "Parser.hpp"
+#include "Exceptions.hpp"
 
 int	main(int argc, char** argv)
 {
-	std::ifstream	fileStream;
-	std::string		str;
-
-	if (argc != 2)
-	{
-		std::cout << "ERROR: Usage: ./webserv [configuration file]" << std::endl;
-		return (1);
-	}
-
-	fileStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-
 	try
 	{
-		fileStream.open(argv[1]);
-		while (!fileStream.eof())
-		{
-			std::getline(fileStream, str);
-			size_t i = 0;
-			for (;str[i] != '\0'; i++) {
-				std::cout << str[i] << "|";
-			}
-			if (str[i] == '\0') std::cout << "....";
-			std::cout << std::endl;
-		}
-		fileStream.close();
+		if (argc != 2)
+			throw ArgumentError();
+		Parser	parser(argv[1]);
+		parser.parserParse();
+	}
+	catch (ArgumentError& e)
+	{
+		std::cerr << e.what() << std::endl;
+		return (1);
 	}
 	catch (std::exception& e)
 	{
-		std::cout << "ERROR: opening/reading/closing file" << std::endl;
+		std::cerr << "ERROR: opening/reading/closing file" << std::endl;
 		return (1);
 	}
 
