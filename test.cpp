@@ -2,16 +2,17 @@
 #include <iostream>
 #include <string>
 
-enum Token {
-	ID,
-	NAME
-};
-
 int	main(void)
 {
-	char	c = 'a';
-	std::string		str = c;
+	char	arr[] = "hamid";
+	std::string	str;
 
-	std::cout << str << std::endl;
+	for (size_t i = 0; i < 5; i++)
+		str += arr[i];
+
+	std::cout << arr << std::endl;
+	if (str[4] == '\0')
+		std::cout << str << std::endl;
+
 	return (0);
 }

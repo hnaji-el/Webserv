@@ -4,6 +4,7 @@
 
 # include <iostream>
 # include <string>
+# include <cctype>
 # include "Token.hpp"
 
 class Lexer
@@ -18,10 +19,12 @@ public:
 	~Lexer(void);
 
 	// member functions: ...
-	Token	lexerGetNextToken(void);
-	void	lexerSkipWhitespaces(void);
-	void	lexerAdvance(void);
-	Token	advanceAndReturn(Token* token);
+	Token	lexerGetNextToken(void);        // OK
+	void	lexerSkipWhitespaces(void);     // OK
+	void	lexerAdvance(void);             // OK
+	Token	getLparenToken(void);           // OK
+	Token	getRparenToken(void);           // OK
+	Token	getWordToken(void);             // OK
 };
 
 #endif
