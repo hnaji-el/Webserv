@@ -6,6 +6,7 @@
 # include <string>
 # include "Lexer.hpp"
 # include "Token.hpp"
+# include "Exceptions.hpp"
 
 class Parser
 {
@@ -18,22 +19,25 @@ public:
 	Parser(const std::string& fileName);
 	~Parser(void);
 
-	// member functions [ Parser ]: ...
+	// ENTRY POINT member function
 	void	parserParse(void);
 
-	// parse blocks: server && location ...
+	// parse blocks: server && location
 	void	parserParseServer(void);
 	void	parserParseLocation(void);
 
-	// parse directives ...
+	// parse directives
 	void	parserParseListen(void);
 	void	parserParseServerName(void);
 	void	parserParseErrorPage(void);
 	void	parserParseLimitSize(void);
 	void	parserParseAcceptedMethods(void);
 	void	parserParseRoot(void);
-	void	parserParseAutoindex(void);
 	void	parserParseIndex(void);
+	void	parserParseAutoIndex(void);
+
+	// HELPER member function
+	void	expectedToken(TokenType type);
 };
 
 #endif

@@ -85,5 +85,5 @@ Token	Lexer::getEndOfLineToken(void)
 	this->_curIndex = 0;
 	this->_curChar = this->_line[0];
 
-	return (Token(TOKEN_EOL, "newline"));
+	return (Token(TOKEN_EOL, "EOL"));
 }
