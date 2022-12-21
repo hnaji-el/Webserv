@@ -24,16 +24,16 @@ void	Parser::parserParse(void)
 	while (this->_curToken.type != TOKEN_EOF)
 	{
 		while (this->_curToken.type == TOKEN_EOL) {
-			this->_curToken = this->_lexer.lexerGetNextToken();
+			this->expectedToken(TOKEN_EOL);
 		}
 		if (this->_curToken.value == "server") {
-			this->_curToken = this->_lexer.lexerGetNextToken();
 			this->parserParseServer();
 		}
-		else {
+		else if (this->_curToken.type != TOKEN_EOF) {
 			throw SyntaxError(this->_curToken.value);
 		}
 	}
+	// CHECK if exist at least one server or not [ CHECK AST ] ...
 }
 
 void	Parser::parserParseServer(void)
@@ -42,8 +42,13 @@ void	Parser::parserParseServer(void)
 	this->expectedToken(TOKEN_LPAREN);
 	this->expectedToken(TOKEN_EOL);
 
-	while (this->_curToken.type != TOKEN_EOF)
+	while (this->_curToken.type != TOKEN_RPAREN)
 	{
+		while (this->_curToken.type == TOKEN_EOL) {
+			this->expectedToken(TOKEN_EOL);
+		}
+		if (this->_curToken.type == TOKEN_RPAREN)
+			break ;
 		if (this->_curToken.value == "listen")
 			this->parserParseListen();
 		else if (this->_curToken.value == "server_name")
@@ -62,13 +67,11 @@ void	Parser::parserParseServer(void)
 			this->parserParseAutoIndex();
 		else if (this->_curToken.value == "location")
 			this->parserParseLocation();
-		else if (this->_curToken.type == TOKEN_RPAREN)
-			return ;
-		else if (this->_curToken.type == TOKEN_EOL)
-			this->expectedToken(TOKEN_EOL);
 		else
 			throw SyntaxError(this->_curToken.value);
 	}
+	// CHECK if [ TOKEN_EOL / TOKEN_EOF ] after TOKEN_RPAREN ...
+	// CHECK if listen directive exist ...
 }
 
 void	Parser::parserParseLocation(void)
@@ -78,9 +81,14 @@ void	Parser::parserParseLocation(void)
 	this->expectedToken(TOKEN_LPAREN);
 	this->expectedToken(TOKEN_EOL);
 
-	while (this->_curToken.type != TOKEN_EOF && this->_curToken.type != TOKEN_RPAREN)
+	while (this->_curToken.type != TOKEN_RPAREN)
 	{
-		if (this->_curToken.value == "error_page")
+		while (this->_curToken.type == TOKEN_EOL) {
+			this->expectedToken(TOKEN_EOL);
+		}
+		if (this->_curToken.type == TOKEN_RPAREN)
+			break ;
+		else if (this->_curToken.value == "error_page")
 			this->parserParseErrorPage();
 		else if (this->_curToken.value == "limit_client_body_size")
 			this->parserParseLimitSize();
@@ -92,11 +100,12 @@ void	Parser::parserParseLocation(void)
 			this->parserParseIndex();
 		else if (this->_curToken.value == "autoindex")
 			this->parserParseAutoIndex();
-		else if (this->_curToken.type == TOKEN_EOL)
-			this->expectedToken(TOKEN_EOL);
+		else if (this->_curToken.value == "location")
+			this->parserParseLocation();
 		else
 			throw SyntaxError(this->_curToken.value);
 	}
+	// CHECK if [ TOKEN_EOL / TOKEN_EOF ] after TOKEN_RPAREN ...
 }
 
 void	Parser::parserParseListen(void)
@@ -170,12 +179,9 @@ void	Parser::parserParseAutoIndex(void)
 
 void	Parser::expectedToken(TokenType type)
 {
-	this->expectedToken(TOKEN_WORD);
 	if (this->_curToken.type != type) {
 		throw SyntaxError(this->_curToken.value);
 	}
 	// TODO: ADD data to AST (TOKEN_WORD) ...
 	this->_curToken = this->_lexer.lexerGetNextToken();
 }
-
-#endif
