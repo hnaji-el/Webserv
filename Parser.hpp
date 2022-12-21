@@ -4,6 +4,7 @@
 
 # include <iostream>
 # include <string>
+# include <map>
 # include "Lexer.hpp"
 # include "Token.hpp"
 # include "Exceptions.hpp"
@@ -13,6 +14,11 @@ class Parser
 private:
 	Lexer	_lexer;
 	Token	_curToken;
+	Token	_prevToken;
+	// maps for dispatching
+	typedef std::map<std::string, void (Parser::*)()> Map;
+	Map		_serverTable;
+	Map		_locationTable;
 
 public:
 	// Constructors && Destructor
@@ -38,6 +44,10 @@ public:
 
 	// HELPER member function
 	void	expectedToken(TokenType type);
+
+	// fill DISPATCHING Tables
+	void	fillServerTable(void);
+	void	fillLocationTable(void);
 };
 
 #endif
