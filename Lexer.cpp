@@ -7,9 +7,9 @@
 
 Lexer::Lexer(const std::string& fileName)
 {
-	this->_fileStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-
 	this->_fileStream.open(fileName);
+	if (!this->_fileStream)
+		throw std::ifstream::failure("");
 	std::getline(this->_fileStream, this->_line);
 	this->_curIndex = 0;
 	this->_curChar = this->_line[0];

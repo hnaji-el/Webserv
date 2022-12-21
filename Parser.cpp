@@ -49,6 +49,7 @@ void	Parser::parserParseServer(void)
 		}
 		if (this->_curToken.type == TOKEN_RPAREN)
 			break ;
+
 		if (this->_curToken.value == "listen")
 			this->parserParseListen();
 		else if (this->_curToken.value == "server_name")
@@ -70,7 +71,11 @@ void	Parser::parserParseServer(void)
 		else
 			throw SyntaxError(this->_curToken.value);
 	}
-	// CHECK if [ TOKEN_EOL / TOKEN_EOF ] after TOKEN_RPAREN ...
+	this->expectedToken(TOKEN_RPAREN);
+	if (this->_curToken.type != TOKEN_EOL && this->_curToken.type != TOKEN_EOF)
+		throw SyntaxError(this->_curToken.value);
+	if (this->_curToken.type != TOKEN_EOF)
+		this->_curToken = this->_lexer.lexerGetNextToken();
 	// CHECK if listen directive exist ...
 }
 
@@ -88,7 +93,8 @@ void	Parser::parserParseLocation(void)
 		}
 		if (this->_curToken.type == TOKEN_RPAREN)
 			break ;
-		else if (this->_curToken.value == "error_page")
+
+		if (this->_curToken.value == "error_page")
 			this->parserParseErrorPage();
 		else if (this->_curToken.value == "limit_client_body_size")
 			this->parserParseLimitSize();
@@ -100,17 +106,17 @@ void	Parser::parserParseLocation(void)
 			this->parserParseIndex();
 		else if (this->_curToken.value == "autoindex")
 			this->parserParseAutoIndex();
-		else if (this->_curToken.value == "location")
-			this->parserParseLocation();
 		else
 			throw SyntaxError(this->_curToken.value);
 	}
-	// CHECK if [ TOKEN_EOL / TOKEN_EOF ] after TOKEN_RPAREN ...
+	this->expectedToken(TOKEN_RPAREN);
+	this->expectedToken(TOKEN_EOL);
 }
 
 void	Parser::parserParseListen(void)
 {
-	this->expectedToken(TOKEN_WORD);
+	this->expectedToken(TOKEN_WORD); // ...
+
 	for (size_t i = 0; i < 2; i++) {
 		this->expectedToken(TOKEN_WORD);
 	}
@@ -119,7 +125,8 @@ void	Parser::parserParseListen(void)
 
 void	Parser::parserParseServerName(void)
 {
-	this->expectedToken(TOKEN_WORD);
+	this->expectedToken(TOKEN_WORD); // ...
+
 	this->expectedToken(TOKEN_WORD);
 	while (this->_curToken.type == TOKEN_WORD) {
 		this->expectedToken(TOKEN_WORD);
@@ -129,7 +136,8 @@ void	Parser::parserParseServerName(void)
 
 void	Parser::parserParseErrorPage(void)
 {
-	this->expectedToken(TOKEN_WORD);
+	this->expectedToken(TOKEN_WORD); // ...
+
 	for (size_t i = 0; i < 2; i++) {
 		this->expectedToken(TOKEN_WORD);
 	}
@@ -138,14 +146,16 @@ void	Parser::parserParseErrorPage(void)
 
 void	Parser::parserParseLimitSize(void)
 {
-	this->expectedToken(TOKEN_WORD);
+	this->expectedToken(TOKEN_WORD); // ...
+
 	this->expectedToken(TOKEN_WORD);
 	this->expectedToken(TOKEN_EOL);
 }
 
 void	Parser::parserParseAcceptedMethods(void)
 {
-	this->expectedToken(TOKEN_WORD);
+	this->expectedToken(TOKEN_WORD); // ...
+
 	this->expectedToken(TOKEN_WORD);
 	for (size_t i = 0; i < 2 && this->_curToken.type == TOKEN_WORD; i++) {
 		this->expectedToken(TOKEN_WORD);
@@ -155,14 +165,16 @@ void	Parser::parserParseAcceptedMethods(void)
 
 void	Parser::parserParseRoot(void)
 {
-	this->expectedToken(TOKEN_WORD);
+	this->expectedToken(TOKEN_WORD); // ...
+
 	this->expectedToken(TOKEN_WORD);
 	this->expectedToken(TOKEN_EOL);
 }
 
 void	Parser::parserParseIndex(void)
 {
-	this->expectedToken(TOKEN_WORD);
+	this->expectedToken(TOKEN_WORD); // ...
+
 	this->expectedToken(TOKEN_WORD);
 	while (this->_curToken.type == TOKEN_WORD) {
 		this->expectedToken(TOKEN_WORD);
@@ -172,7 +184,8 @@ void	Parser::parserParseIndex(void)
 
 void	Parser::parserParseAutoIndex(void)
 {
-	this->expectedToken(TOKEN_WORD);
+	this->expectedToken(TOKEN_WORD); // ...
+
 	this->expectedToken(TOKEN_WORD);
 	this->expectedToken(TOKEN_EOL);
 }
