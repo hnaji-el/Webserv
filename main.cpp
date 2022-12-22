@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include "Parser.hpp"
+#include "ServerData.hpp"
 #include "Exceptions.hpp"
 
 int	main(int argc, char** argv)
