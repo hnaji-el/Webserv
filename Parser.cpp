@@ -20,7 +20,7 @@ Parser::~Parser(void)
 }
 
 /*
- * member functions for dispatching tables
+ * member functions for dispatching
  */
 
 void	Parser::fillServerTable(void)
@@ -83,7 +83,6 @@ void	Parser::parserParseServer(void)
 			throw SyntaxError(this->_curToken.value);
 		this->expectedToken(TOKEN_WORD);
 		(this->*(iter->second))();
-		this->expectedToken(TOKEN_EOL);
 	}
 
 	this->expectedToken(TOKEN_RPAREN);
@@ -113,6 +112,7 @@ void	Parser::parserParseLocation(void)
 		(this->*(iter->second))();
 	}
 	this->expectedToken(TOKEN_RPAREN);
+	this->expectedToken(TOKEN_EOL);
 }
 
 void	Parser::parserParseListen(void)
@@ -120,6 +120,7 @@ void	Parser::parserParseListen(void)
 	for (size_t i = 0; i < 2; i++) {
 		this->expectedToken(TOKEN_WORD);
 	}
+	this->expectedToken(TOKEN_EOL);
 }
 
 void	Parser::parserParseServerName(void)
@@ -128,6 +129,7 @@ void	Parser::parserParseServerName(void)
 	while (this->_curToken.type == TOKEN_WORD) {
 		this->expectedToken(TOKEN_WORD);
 	}
+	this->expectedToken(TOKEN_EOL);
 }
 
 void	Parser::parserParseErrorPage(void)
@@ -135,6 +137,7 @@ void	Parser::parserParseErrorPage(void)
 	for (size_t i = 0; i < 2; i++) {
 		this->expectedToken(TOKEN_WORD);
 	}
+	this->expectedToken(TOKEN_EOL);
 }
 
 void	Parser::parserParseLimitSize(void)
@@ -149,11 +152,13 @@ void	Parser::parserParseAcceptedMethods(void)
 	for (size_t i = 0; i < 2 && this->_curToken.type == TOKEN_WORD; i++) {
 		this->expectedToken(TOKEN_WORD);
 	}
+	this->expectedToken(TOKEN_EOL);
 }
 
 void	Parser::parserParseRoot(void)
 {
 	this->expectedToken(TOKEN_WORD);
+	this->expectedToken(TOKEN_EOL);
 }
 
 void	Parser::parserParseIndex(void)
@@ -162,11 +167,13 @@ void	Parser::parserParseIndex(void)
 	while (this->_curToken.type == TOKEN_WORD) {
 		this->expectedToken(TOKEN_WORD);
 	}
+	this->expectedToken(TOKEN_EOL);
 }
 
 void	Parser::parserParseAutoIndex(void)
 {
 	this->expectedToken(TOKEN_WORD);
+	this->expectedToken(TOKEN_EOL);
 }
 
 void	Parser::expectedToken(TokenType type)

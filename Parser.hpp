@@ -15,7 +15,7 @@ private:
 	Lexer	_lexer;
 	Token	_curToken;
 	Token	_prevToken;
-	// maps for dispatching
+	// DISPATCH Tables
 	typedef std::map<std::string, void (Parser::*)()> Map;
 	Map		_serverTable;
 	Map		_locationTable;
@@ -45,7 +45,7 @@ public:
 	// HELPER member function
 	void	expectedToken(TokenType type);
 
-	// fill DISPATCHING Tables
+	// fill DISPATCH Tables
 	void	fillServerTable(void);
 	void	fillLocationTable(void);
 };
