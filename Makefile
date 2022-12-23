@@ -2,9 +2,9 @@
 NAME = webserv
 
 SRCS = main.cpp \
-	   Parser.cpp Lexer.cpp Token.cpp
+	   Parser.cpp Lexer.cpp Token.cpp ServerData.cpp
 
-HEADERS = Parser.hpp Lexer.hpp Token.hpp Exceptions.hpp
+HEADERS = Parser.hpp Lexer.hpp Token.hpp Exceptions.hpp ServerData.hpp
 
 COMPILER = c++
 

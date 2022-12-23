@@ -4,23 +4,25 @@
 
 # include <string>
 # include <vector>
+# include <map>
 # include <utility>
 
-typedef	std::vector<std::string>					VectorOfStrings;
-typedef std::vector<std::pair<int, std::string> >	VectorOfPairs;
+typedef	std::vector<std::string>				VectorOfStrings;
+typedef std::map<unsigned short, std::string>	MapOfStatusCode;
 
 class LocationData
 {
 public:
 	// LOCATION's DATA
+	std::string		pathName;
 	bool			GET;
 	bool			POST;
 	bool			DELETE;
 	bool			autoindex;
-	size_t			limitSize;
+	long			limitSize;
 	std::string		root;
 	VectorOfStrings	index;
-	VectorOfPairs	statusCode;
+	MapOfStatusCode	statusCode;
 
 public:
 	// Constructors && Destructor
@@ -39,10 +41,10 @@ public:
 	bool			POST;
 	bool			DELETE;
 	bool			autoindex;
-	size_t			limitSize;
+	long			limitSize;
 	std::string		root;
 	VectorOfStrings	index;
-	VectorOfPairs	statusCode;
+	MapOfStatusCode	statusCode;
 	// LOCATION's DATA
 	std::vector<LocationData>	location;
 
