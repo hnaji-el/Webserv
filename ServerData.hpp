@@ -14,7 +14,7 @@ class LocationData
 {
 public:
 	// LOCATION's DATA
-	std::string		pathName;
+	std::string		pathname;
 	bool			GET;
 	bool			POST;
 	bool			DELETE;

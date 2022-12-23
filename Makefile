@@ -2,13 +2,14 @@
 NAME = webserv
 
 SRCS = main.cpp \
-	   Parser.cpp Lexer.cpp Token.cpp ServerData.cpp
+	   Parser.cpp Lexer.cpp Token.cpp ServerData.cpp \
+	   visitor.cpp
 
 HEADERS = Parser.hpp Lexer.hpp Token.hpp Exceptions.hpp ServerData.hpp
 
 COMPILER = c++
 
-FLAGS = -std=c++98 -Wall -Wextra -Werror
+FLAGS = -std=c++98 -Wall -Wextra -Werror -g -fsanitize=address
 
 all: $(NAME)
 

@@ -5,6 +5,7 @@
 # include <iostream>
 # include <string>
 # include <map>
+# include <set>
 # include <limits>
 # include "Lexer.hpp"
 # include "Token.hpp"
@@ -13,19 +14,23 @@
 
 class Parser
 {
+/* MEMBER TYPES */
+private:
+	typedef std::map<std::string, void (Parser::*)(ServerData&)>	SerBlockTable;
+	typedef std::map<std::string, void (Parser::*)(LocationData&)>	LocBlockTable;
+
+/* DATA MEMBERS */
 private:
 	Lexer	_lexer;
 	Token	_curToken;
 	Token	_prevToken;
 	// AST
 	std::vector<ServerData>&	_configData;
-	size_t	_szS;
-	size_t	_szL;
 	// DISPATCH Tables
-	typedef std::map<std::string, void (Parser::*)()> Map;
-	Map		_serverTable;
-	Map		_locationTable;
+	SerBlockTable	_serverTable;
+	LocBlockTable	_locationTable;
 
+/* MEMBER FUNCTIONS */
 public:
 	// Constructors && Destructor
 	Parser(const std::string& fileName, std::vector<ServerData>& configData);
@@ -36,33 +41,34 @@ public:
 
 	// parse blocks: server && location
 	void	parserParseServer(void);
-	void	parserParseLocation(void);
+	void	parserParseLocation(ServerData& serData);
 
 	// parse directives of Server block
-	void	parserParseListen(void);
-	void	parserParseServerName(void);
-	void	parserParseErrorPage(void);
-	void	parserParseLimitSize(void);
-	void	parserParseAcceptedMethods(void);
-	void	parserParseRoot(void);
-	void	parserParseIndex(void);
-	void	parserParseAutoindex(void);
+	void	parserParseListen(ServerData& serData);
+	void	parserParseServerName(ServerData& serData);
+	void	parserParseErrorPage(ServerData& serData);
+	void	parserParseLimitSize(ServerData& serData);
+	void	parserParseAcceptedMethods(ServerData& serData);
+	void	parserParseRoot(ServerData& serData);
+	void	parserParseIndex(ServerData& serData);
+	void	parserParseAutoindex(ServerData& serData);
 
 	// parse directives of Location block
-	void	parserParseErrorPageLoc(void);
-	void	parserParseLimitSizeLoc(void);
-	void	parserParseAcceptedMethodsLoc(void);
-	void	parserParseRootLoc(void);
-	void	parserParseIndexLoc(void);
-	void	parserParseAutoindexLoc(void);
+	void	parserParseErrorPageLoc(LocationData& locData);
+	void	parserParseLimitSizeLoc(LocationData& locData);
+	void	parserParseAcceptedMethodsLoc(LocationData& locData);
+	void	parserParseRootLoc(LocationData& locData);
+	void	parserParseIndexLoc(LocationData& locData);
+	void	parserParseAutoindexLoc(LocationData& locData);
 
 	// HELPER member function
 	void	expectedToken(TokenType type);
 	bool	isNumber(const std::string& str);
 	size_t	stringToNumber(const std::string& str);
 	long	checkAndGetNumber(const std::string& str);
-	void	checkAndSetMethods(void);
-	void	checkAndSetMethodsLoc(void);
+	void	checkAndSetMethods(ServerData& serData);
+	void	checkAndSetMethodsLoc(LocationData& locData);
+	bool	isLocationDuplicate(const std::vector<LocationData>& loc);
 
 	// fill DISPATCH Tables
 	void	fillServerTable(void);
@@ -70,26 +76,3 @@ public:
 };
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -7,6 +7,7 @@
 # include <string>
 # include <cctype>
 # include "Token.hpp"
+# include "Exceptions.hpp"
 
 class Lexer
 {

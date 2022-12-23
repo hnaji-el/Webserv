@@ -6,7 +6,7 @@
  */
 
 Parser::Parser(const std::string& fileName, std::vector<ServerData>& configData)
-	: _lexer(fileName), _configData(configData), _szS(0), _szL(0)
+	: _lexer(fileName), _configData(configData)
 {
 	this->_curToken = this->_lexer.lexerGetNextToken();
 	this->_prevToken = this->_curToken;
@@ -64,15 +64,29 @@ void	Parser::parserParse(void)
 		else if (this->_curToken.type != TOKEN_EOF)
 			throw SyntaxError(this->_curToken.value);
 	}
+	if (this->_configData.size() == 0)
+		throw Failure("webserv: [ERROR]: configure at least one server block");
+}
+
+/*
+ * parse blocks: server && location
+ */
+
+bool	Parser::isLocationDuplicate(const std::vector<LocationData>& loc)
+{
+	std::set<std::string>	st;
+
+	for (size_t i = 0; i < loc.size(); i++)
+		st.insert(loc[i].pathname);
+	return (st.size() != loc.size());
 }
 
 void	Parser::parserParseServer(void)
 {
+	this->_configData.push_back(ServerData());
+
 	this->expectedToken(TOKEN_LPAREN);
 	this->expectedToken(TOKEN_EOL);
-
-	this->_configData.push_back(ServerData());
-	this->_szS++;
 	while (this->_curToken.type != TOKEN_RPAREN)
 	{
 		while (this->_curToken.type == TOKEN_EOL)
@@ -80,28 +94,29 @@ void	Parser::parserParseServer(void)
 		if (this->_curToken.type == TOKEN_RPAREN)
 			break ;
 
-		Map::iterator	iter = this->_serverTable.find(this->_curToken.value);
+		SerBlockTable::iterator	iter = this->_serverTable.find(this->_curToken.value);
 		if (iter == this->_serverTable.end())
 			throw SyntaxError(this->_curToken.value);
 		this->expectedToken(TOKEN_WORD);
-		(this->*(iter->second))();
+		(this->*(iter->second))(this->_configData[this->_configData.size() - 1]);
 	}
-
 	this->expectedToken(TOKEN_RPAREN);
 	if (this->_curToken.type != TOKEN_EOL && this->_curToken.type != TOKEN_EOF)
 		throw SyntaxError(this->_curToken.value);
 	if (this->_curToken.type == TOKEN_EOL)
 		this->expectedToken(TOKEN_EOL);
+	if (this->isLocationDuplicate(this->_configData[this->_configData.size() - 1].location) == true)
+		throw Failure("webserv: [ERROR]: `location' directive is duplicate");
 }
 
-void	Parser::parserParseLocation(void)
+void	Parser::parserParseLocation(ServerData& serData)
 {
+	serData.location.push_back(LocationData());
+
 	this->expectedToken(TOKEN_WORD);
+	serData.location[serData.location.size() - 1].pathname = this->_prevToken.value;
 	this->expectedToken(TOKEN_LPAREN);
 	this->expectedToken(TOKEN_EOL);
-
-	this->_configData[this->_szS - 1].location.push_back(LocationData());
-	this->_szL++;
 	while (this->_curToken.type != TOKEN_RPAREN)
 	{
 		while (this->_curToken.type == TOKEN_EOL)
@@ -109,11 +124,11 @@ void	Parser::parserParseLocation(void)
 		if (this->_curToken.type == TOKEN_RPAREN)
 			break ;
 
-		Map::iterator	iter = this->_locationTable.find(this->_curToken.value);
+		LocBlockTable::iterator	iter = this->_locationTable.find(this->_curToken.value);
 		if (iter == this->_locationTable.end())
 			throw SyntaxError(this->_curToken.value);
 		this->expectedToken(TOKEN_WORD);
-		(this->*(iter->second))();
+		(this->*(iter->second))(serData.location[serData.location.size() - 1]);
 	}
 	this->expectedToken(TOKEN_RPAREN);
 	this->expectedToken(TOKEN_EOL);
@@ -123,36 +138,36 @@ void	Parser::parserParseLocation(void)
  * Parse directives of Server block
  */
 
-void	Parser::parserParseListen(void)
+void	Parser::parserParseListen(ServerData& serData)
 {
 	long	port = 0;
 
 	this->expectedToken(TOKEN_WORD);
-	this->_configData[this->_szS - 1].host = this->_prevToken.value;
+	serData.host = this->_prevToken.value;
 
 	this->expectedToken(TOKEN_WORD);
 	port = this->checkAndGetNumber(this->_prevToken.value);
 	if (port < 1 || port > 65535)
 		throw SyntaxError(this->_prevToken.value);
-	this->_configData[this->_szS - 1].port = port;
+	serData.port = port;
 
 	this->expectedToken(TOKEN_EOL);
 }
 
-void	Parser::parserParseServerName(void)
+void	Parser::parserParseServerName(ServerData& serData)
 {
 	this->expectedToken(TOKEN_WORD);
-	this->_configData[this->_szS - 1].serverName.push_back(this->_prevToken.value);
+	serData.serverName.push_back(this->_prevToken.value);
 
 	while (this->_curToken.type == TOKEN_WORD)
 	{
 		this->expectedToken(TOKEN_WORD);
-		this->_configData[this->_szS - 1].serverName.push_back(this->_prevToken.value);
+		serData.serverName.push_back(this->_prevToken.value);
 	}
 	this->expectedToken(TOKEN_EOL);
 }
 
-void	Parser::parserParseErrorPage(void)
+void	Parser::parserParseErrorPage(ServerData& serData)
 {
 	long	num = 0;
 
@@ -161,12 +176,12 @@ void	Parser::parserParseErrorPage(void)
 	if (num < 100 || num > 599)
 		throw SyntaxError(this->_prevToken.value);
 	this->expectedToken(TOKEN_WORD);
-	this->_configData[this->_szS - 1].statusCode[num] = this->_prevToken.value;
+	serData.statusCode[num] = this->_prevToken.value;
 
 	this->expectedToken(TOKEN_EOL);
 }
 
-void	Parser::parserParseLimitSize(void)
+void	Parser::parserParseLimitSize(ServerData& serData)
 {
 	long	num = 0;
 
@@ -174,60 +189,60 @@ void	Parser::parserParseLimitSize(void)
 	num = this->checkAndGetNumber(this->_prevToken.value);
 	if (num == -1)
 		throw SyntaxError(this->_prevToken.value);
-	this->_configData[this->_szS - 1].limitSize = num;
+	serData.limitSize = num;
 	
 	this->expectedToken(TOKEN_EOL);
 }
 
-void	Parser::checkAndSetMethods(void)
+void	Parser::checkAndSetMethods(ServerData& serData)
 {
 	if (this->_prevToken.value == "GET")
-		this->_configData[this->_szS - 1].GET = true;
+		serData.GET = true;
 	else if (this->_prevToken.value == "POST")
-		this->_configData[this->_szS - 1].POST = true;
+		serData.POST = true;
 	else if (this->_prevToken.value == "DELETE")
-		this->_configData[this->_szS - 1].DELETE = true;
+		serData.DELETE = true;
 	else
 		throw SyntaxError(this->_prevToken.value);
 }
 
-void	Parser::parserParseAcceptedMethods(void)
+void	Parser::parserParseAcceptedMethods(ServerData& serData)
 {
 	this->expectedToken(TOKEN_WORD);
-	this->checkAndSetMethods();
+	this->checkAndSetMethods(serData);
 	for (size_t i = 0; i < 2 && this->_curToken.type == TOKEN_WORD; i++) {
 		this->expectedToken(TOKEN_WORD);
-		this->checkAndSetMethods();
+		this->checkAndSetMethods(serData);
 	}
 	this->expectedToken(TOKEN_EOL);
 }
 
-void	Parser::parserParseRoot(void)
+void	Parser::parserParseRoot(ServerData& serData)
 {
 	this->expectedToken(TOKEN_WORD);
-	this->_configData[this->_szS - 1].root = this->_prevToken.value;
+	serData.root = this->_prevToken.value;
 	this->expectedToken(TOKEN_EOL);
 }
 
-void	Parser::parserParseIndex(void)
+void	Parser::parserParseIndex(ServerData& serData)
 {
 	this->expectedToken(TOKEN_WORD);
-	this->_configData[this->_szS - 1].index.push_back(this->_prevToken.value);
+	serData.index.push_back(this->_prevToken.value);
 
 	while (this->_curToken.type == TOKEN_WORD)
 	{
 		this->expectedToken(TOKEN_WORD);
-		this->_configData[this->_szS - 1].index.push_back(this->_prevToken.value);
+		serData.index.push_back(this->_prevToken.value);
 	}
 	this->expectedToken(TOKEN_EOL);
 }
 
-void	Parser::parserParseAutoindex(void)
+void	Parser::parserParseAutoindex(ServerData& serData)
 {
 	this->expectedToken(TOKEN_WORD);
 	if (this->_prevToken.value != "on")
 		throw SyntaxError(this->_prevToken.value);
-	this->_configData[this->_szS - 1].autoindex = true;
+	serData.autoindex = true;
 	this->expectedToken(TOKEN_EOL);
 }
 
@@ -235,7 +250,7 @@ void	Parser::parserParseAutoindex(void)
  * Parse directives of Location block
  */
 
-void	Parser::parserParseErrorPageLoc(void)
+void	Parser::parserParseErrorPageLoc(LocationData& locData)
 {
 	long	num = 0;
 
@@ -244,12 +259,12 @@ void	Parser::parserParseErrorPageLoc(void)
 	if (num < 100 || num > 599)
 		throw SyntaxError(this->_prevToken.value);
 	this->expectedToken(TOKEN_WORD);
-	this->_configData[this->_szS - 1].location[this->_szL - 1].statusCode[num] = this->_prevToken.value;
+	locData.statusCode[num] = this->_prevToken.value;
 
 	this->expectedToken(TOKEN_EOL);
 }
 
-void	Parser::parserParseLimitSizeLoc(void)
+void	Parser::parserParseLimitSizeLoc(LocationData& locData)
 {
 	long	num = 0;
 
@@ -257,60 +272,60 @@ void	Parser::parserParseLimitSizeLoc(void)
 	num = this->checkAndGetNumber(this->_prevToken.value);
 	if (num == -1)
 		throw SyntaxError(this->_prevToken.value);
-	this->_configData[this->_szS - 1].location[this->_szL - 1].limitSize = num;
+	locData.limitSize = num;
 	
 	this->expectedToken(TOKEN_EOL);
 }
 
-void	Parser::checkAndSetMethodsLoc(void)
+void	Parser::checkAndSetMethodsLoc(LocationData& locData)
 {
 	if (this->_prevToken.value == "GET")
-		this->_configData[this->_szS - 1].location[this->_szL - 1].GET = true;
+		locData.GET = true;
 	else if (this->_prevToken.value == "POST")
-		this->_configData[this->_szS - 1].location[this->_szL - 1].POST = true;
+		locData.POST = true;
 	else if (this->_prevToken.value == "DELETE")
-		this->_configData[this->_szS - 1].location[this->_szL - 1].DELETE = true;
+		locData.DELETE = true;
 	else
 		throw SyntaxError(this->_prevToken.value);
 }
 
-void	Parser::parserParseAcceptedMethodsLoc(void)
+void	Parser::parserParseAcceptedMethodsLoc(LocationData& locData)
 {
 	this->expectedToken(TOKEN_WORD);
-	this->checkAndSetMethodsLoc();
+	this->checkAndSetMethodsLoc(locData);
 	for (size_t i = 0; i < 2 && this->_curToken.type == TOKEN_WORD; i++) {
 		this->expectedToken(TOKEN_WORD);
-		this->checkAndSetMethodsLoc();
+		this->checkAndSetMethodsLoc(locData);
 	}
 	this->expectedToken(TOKEN_EOL);
 }
 
-void	Parser::parserParseRootLoc(void)
+void	Parser::parserParseRootLoc(LocationData& locData)
 {
 	this->expectedToken(TOKEN_WORD);
-	this->_configData[this->_szS - 1].location[this->_szL - 1].root = this->_prevToken.value;
+	locData.root = this->_prevToken.value;
 	this->expectedToken(TOKEN_EOL);
 }
 
-void	Parser::parserParseIndexLoc(void)
+void	Parser::parserParseIndexLoc(LocationData& locData)
 {
 	this->expectedToken(TOKEN_WORD);
-	this->_configData[this->_szS - 1].location[this->_szL - 1].index.push_back(this->_prevToken.value);
+	locData.index.push_back(this->_prevToken.value);
 
 	while (this->_curToken.type == TOKEN_WORD)
 	{
 		this->expectedToken(TOKEN_WORD);
-		this->_configData[this->_szS - 1].location[this->_szL - 1].index.push_back(this->_prevToken.value);
+		locData.index.push_back(this->_prevToken.value);
 	}
 	this->expectedToken(TOKEN_EOL);
 }
 
-void	Parser::parserParseAutoindexLoc(void)
+void	Parser::parserParseAutoindexLoc(LocationData& locData)
 {
 	this->expectedToken(TOKEN_WORD);
 	if (this->_prevToken.value != "on")
 		throw SyntaxError(this->_prevToken.value);
-	this->_configData[this->_szS - 1].location[this->_szL - 1].autoindex = true;
+	locData.autoindex = true;
 	this->expectedToken(TOKEN_EOL);
 }
 
