@@ -9,6 +9,7 @@
 
 typedef	std::vector<std::string>				VectorOfStrings;
 typedef std::map<unsigned short, std::string>	MapOfStatusCode;
+typedef std::pair<unsigned short, std::string>	Pair;
 
 class ServerData;
 
@@ -23,6 +24,7 @@ public:
 	std::string		root;
 	VectorOfStrings	index;
 	MapOfStatusCode	statusCode;
+	Pair			redirect;
 
 	// Helper data member
 	bool	flag;
@@ -46,6 +48,7 @@ public:
 	std::string		root;
 	VectorOfStrings	index;
 	MapOfStatusCode	statusCode;
+	Pair			redirect;
 	// LOCATION's DATA
 	std::vector<LocationData>	location;
 
