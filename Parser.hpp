@@ -29,6 +29,9 @@ private:
 	// DISPATCH Tables
 	SerBlockTable	_serverTable;
 	LocBlockTable	_locationTable;
+	// sets for directive duplications
+	std::set<std::string>	_numOfCallS;
+	std::set<std::string>	_numOfCallL;
 
 /* MEMBER FUNCTIONS */
 public:
@@ -68,7 +71,13 @@ public:
 	long	checkAndGetNumber(const std::string& str);
 	void	checkAndSetMethods(ServerData& serData);
 	void	checkAndSetMethodsLoc(LocationData& locData);
-	bool	isLocationDuplicate(const std::vector<LocationData>& loc);
+
+	void	isDirectiveDuplicate(std::set<std::string>& st, const std::string& str);
+	void	isLocationDuplicate(const std::vector<LocationData>& loc);
+	void	isPortDuplicate(const std::vector<ServerData>& ser);
+
+	template<class T>
+		void	isDuplicate(const std::vector<T>& vec, const std::string& str);
 
 	// fill DISPATCH Tables
 	void	fillServerTable(void);

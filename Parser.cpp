@@ -64,26 +64,20 @@ void	Parser::parserParse(void)
 		else if (this->_curToken.type != TOKEN_EOF)
 			throw SyntaxError(this->_curToken.value);
 	}
-	if (this->_configData.size() == 0)
+
+	if (this->_configData.empty())
 		throw Failure("webserv: [ERROR]: configure at least one server block");
+	this->isPortDuplicate(this->_configData);
 }
 
 /*
  * parse blocks: server && location
  */
 
-bool	Parser::isLocationDuplicate(const std::vector<LocationData>& loc)
-{
-	std::set<std::string>	st;
-
-	for (size_t i = 0; i < loc.size(); i++)
-		st.insert(loc[i].pathname);
-	return (st.size() != loc.size());
-}
-
 void	Parser::parserParseServer(void)
 {
 	this->_configData.push_back(ServerData());
+	this->_numOfCallS.clear();
 
 	this->expectedToken(TOKEN_LPAREN);
 	this->expectedToken(TOKEN_EOL);
@@ -105,13 +99,14 @@ void	Parser::parserParseServer(void)
 		throw SyntaxError(this->_curToken.value);
 	if (this->_curToken.type == TOKEN_EOL)
 		this->expectedToken(TOKEN_EOL);
-	if (this->isLocationDuplicate(this->_configData[this->_configData.size() - 1].location) == true)
-		throw Failure("webserv: [ERROR]: `location' directive is duplicate");
+
+	this->isLocationDuplicate(this->_configData[this->_configData.size() - 1].location);
 }
 
 void	Parser::parserParseLocation(ServerData& serData)
 {
 	serData.location.push_back(LocationData());
+	this->_numOfCallL.clear();
 
 	this->expectedToken(TOKEN_WORD);
 	serData.location[serData.location.size() - 1].pathname = this->_prevToken.value;
@@ -140,7 +135,9 @@ void	Parser::parserParseLocation(ServerData& serData)
 
 void	Parser::parserParseListen(ServerData& serData)
 {
-	long	port = 0;
+	long		port = 0;
+
+	this->isDirectiveDuplicate(this->_numOfCallS, "listen");
 
 	this->expectedToken(TOKEN_WORD);
 	serData.host = this->_prevToken.value;
@@ -156,6 +153,8 @@ void	Parser::parserParseListen(ServerData& serData)
 
 void	Parser::parserParseServerName(ServerData& serData)
 {
+	this->isDirectiveDuplicate(this->_numOfCallS, "server_name");
+
 	this->expectedToken(TOKEN_WORD);
 	serData.serverName.push_back(this->_prevToken.value);
 
@@ -165,6 +164,8 @@ void	Parser::parserParseServerName(ServerData& serData)
 		serData.serverName.push_back(this->_prevToken.value);
 	}
 	this->expectedToken(TOKEN_EOL);
+
+	this->isDuplicate(serData.serverName, "server_name");
 }
 
 void	Parser::parserParseErrorPage(ServerData& serData)
@@ -176,14 +177,17 @@ void	Parser::parserParseErrorPage(ServerData& serData)
 	if (num < 100 || num > 599)
 		throw SyntaxError(this->_prevToken.value);
 	this->expectedToken(TOKEN_WORD);
-	serData.statusCode[num] = this->_prevToken.value;
+	if (serData.statusCode.insert(std::make_pair(num,_prevToken.value)).second == false)
+		throw Failure("webserv: [ERROR]: `error_page' directive is duplicate");
 
 	this->expectedToken(TOKEN_EOL);
 }
 
 void	Parser::parserParseLimitSize(ServerData& serData)
 {
-	long	num = 0;
+	long		num = 0;
+
+	this->isDirectiveDuplicate(this->_numOfCallS, "Limit_client_body_size");
 
 	this->expectedToken(TOKEN_WORD);
 	num = this->checkAndGetNumber(this->_prevToken.value);
@@ -208,6 +212,8 @@ void	Parser::checkAndSetMethods(ServerData& serData)
 
 void	Parser::parserParseAcceptedMethods(ServerData& serData)
 {
+	this->isDirectiveDuplicate(this->_numOfCallS, "accepted_methods");
+
 	this->expectedToken(TOKEN_WORD);
 	this->checkAndSetMethods(serData);
 	for (size_t i = 0; i < 2 && this->_curToken.type == TOKEN_WORD; i++) {
@@ -219,6 +225,8 @@ void	Parser::parserParseAcceptedMethods(ServerData& serData)
 
 void	Parser::parserParseRoot(ServerData& serData)
 {
+	this->isDirectiveDuplicate(this->_numOfCallS, "root");
+
 	this->expectedToken(TOKEN_WORD);
 	serData.root = this->_prevToken.value;
 	this->expectedToken(TOKEN_EOL);
@@ -226,6 +234,8 @@ void	Parser::parserParseRoot(ServerData& serData)
 
 void	Parser::parserParseIndex(ServerData& serData)
 {
+	this->isDirectiveDuplicate(this->_numOfCallS, "index");
+	
 	this->expectedToken(TOKEN_WORD);
 	serData.index.push_back(this->_prevToken.value);
 
@@ -235,10 +245,14 @@ void	Parser::parserParseIndex(ServerData& serData)
 		serData.index.push_back(this->_prevToken.value);
 	}
 	this->expectedToken(TOKEN_EOL);
+
+	this->isDuplicate(serData.index, "index");
 }
 
 void	Parser::parserParseAutoindex(ServerData& serData)
 {
+	this->isDirectiveDuplicate(this->_numOfCallS, "autoindex");
+	
 	this->expectedToken(TOKEN_WORD);
 	if (this->_prevToken.value != "on")
 		throw SyntaxError(this->_prevToken.value);
@@ -259,14 +273,17 @@ void	Parser::parserParseErrorPageLoc(LocationData& locData)
 	if (num < 100 || num > 599)
 		throw SyntaxError(this->_prevToken.value);
 	this->expectedToken(TOKEN_WORD);
-	locData.statusCode[num] = this->_prevToken.value;
+	if (locData.statusCode.insert(std::make_pair(num,_prevToken.value)).second == false)
+		throw Failure("webserv: [ERROR]: `error_page' directive is duplicate");
 
 	this->expectedToken(TOKEN_EOL);
 }
 
 void	Parser::parserParseLimitSizeLoc(LocationData& locData)
 {
-	long	num = 0;
+	long		num = 0;
+
+	this->isDirectiveDuplicate(this->_numOfCallL, "Limit_client_body_size");
 
 	this->expectedToken(TOKEN_WORD);
 	num = this->checkAndGetNumber(this->_prevToken.value);
@@ -291,6 +308,8 @@ void	Parser::checkAndSetMethodsLoc(LocationData& locData)
 
 void	Parser::parserParseAcceptedMethodsLoc(LocationData& locData)
 {
+	this->isDirectiveDuplicate(this->_numOfCallL, "accepted_methods");
+
 	this->expectedToken(TOKEN_WORD);
 	this->checkAndSetMethodsLoc(locData);
 	for (size_t i = 0; i < 2 && this->_curToken.type == TOKEN_WORD; i++) {
@@ -302,6 +321,8 @@ void	Parser::parserParseAcceptedMethodsLoc(LocationData& locData)
 
 void	Parser::parserParseRootLoc(LocationData& locData)
 {
+	this->isDirectiveDuplicate(this->_numOfCallL, "root");
+
 	this->expectedToken(TOKEN_WORD);
 	locData.root = this->_prevToken.value;
 	this->expectedToken(TOKEN_EOL);
@@ -309,6 +330,8 @@ void	Parser::parserParseRootLoc(LocationData& locData)
 
 void	Parser::parserParseIndexLoc(LocationData& locData)
 {
+	this->isDirectiveDuplicate(this->_numOfCallL, "index");
+
 	this->expectedToken(TOKEN_WORD);
 	locData.index.push_back(this->_prevToken.value);
 
@@ -318,10 +341,14 @@ void	Parser::parserParseIndexLoc(LocationData& locData)
 		locData.index.push_back(this->_prevToken.value);
 	}
 	this->expectedToken(TOKEN_EOL);
+
+	this->isDuplicate(locData.index, "index");
 }
 
 void	Parser::parserParseAutoindexLoc(LocationData& locData)
 {
+	this->isDirectiveDuplicate(this->_numOfCallL, "autoindex");
+
 	this->expectedToken(TOKEN_WORD);
 	if (this->_prevToken.value != "on")
 		throw SyntaxError(this->_prevToken.value);
@@ -369,4 +396,39 @@ long	Parser::checkAndGetNumber(const std::string& str)
 		return (-1);
 	}
 	return (num);
+}
+
+void	Parser::isDirectiveDuplicate(std::set<std::string>& st, const std::string& str)
+{
+	if (st.insert(str).second == false)
+		throw Failure("webserv: [ERROR]: `" + str + "' directive is duplicate");
+}
+
+void	Parser::isLocationDuplicate(const std::vector<LocationData>& loc)
+{
+	std::vector<std::string>	vec(loc.size());
+
+	for (size_t i = 0; i < loc.size(); i++)
+		vec[i] = loc[i].pathname;
+
+	this->isDuplicate(vec, "location");
+}
+
+void	Parser::isPortDuplicate(const std::vector<ServerData>& ser)
+{
+	std::vector<unsigned short>	vec(ser.size());
+
+	for (size_t i = 0; i < ser.size(); i++)
+		vec[i] = ser[i].port;
+
+	this->isDuplicate(vec, "listen :port");
+}
+
+template<class T>
+void	Parser::isDuplicate(const std::vector<T>& vec, const std::string& str)
+{
+	const std::set<T>	st(vec.begin(), vec.end());
+
+	if (st.size() != vec.size())
+		throw Failure("webserv: [ERROR]: `" + str + "' directive is duplicate");
 }
