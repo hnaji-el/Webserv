@@ -69,9 +69,10 @@ public:
 	bool	isNumber(const std::string& str);
 	size_t	stringToNumber(const std::string& str);
 	long	checkAndGetNumber(const std::string& str);
-	void	checkAndSetMethods(ServerData& serData);
-	void	checkAndSetMethodsLoc(LocationData& locData);
+	void	checkAndSetMethods(std::vector<std::string>& vec, const std::string& str);
+	void	clearStatusCodes(LocationData& locData);
 
+	void	isRootExist(const ServerData& serData);
 	void	isDirectiveDuplicate(std::set<std::string>& st, const std::string& str);
 	void	isLocationDuplicate(const std::vector<LocationData>& loc);
 	void	isPortDuplicate(const std::vector<ServerData>& ser);

@@ -10,23 +10,26 @@
 typedef	std::vector<std::string>				VectorOfStrings;
 typedef std::map<unsigned short, std::string>	MapOfStatusCode;
 
+class ServerData;
+
 class LocationData
 {
 public:
 	// LOCATION's DATA
 	std::string		pathname;
-	bool			GET;
-	bool			POST;
-	bool			DELETE;
+	VectorOfStrings	acceptedMeths;
 	bool			autoindex;
 	long			limitSize;
 	std::string		root;
 	VectorOfStrings	index;
 	MapOfStatusCode	statusCode;
 
+	// Helper data member
+	bool	flag;
+
 public:
 	// Constructors && Destructor
-	LocationData(void);
+	LocationData(const ServerData& ser);
 	~LocationData(void);
 };
 
@@ -37,9 +40,7 @@ public:
 	std::string		host;
 	unsigned short	port;
 	VectorOfStrings	serverName;
-	bool			GET;
-	bool			POST;
-	bool			DELETE;
+	VectorOfStrings	acceptedMeths;
 	bool			autoindex;
 	long			limitSize;
 	std::string		root;
